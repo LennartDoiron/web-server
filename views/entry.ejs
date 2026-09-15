@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+  </head>
+  <body>
+    <%- include('partials/header') %>
+    <main>
+      <article>
+        <h2><%= entry.title %></h2>
+        <p><%= entry.body %></p>
+      </article>
+
+      <p><a href="/entries">Back to all entries</a></p>
+    </main>
+  </body>
+</html>

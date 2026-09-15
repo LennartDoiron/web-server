@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+  </head>
+  <body>
+    <%- include('partials/header') %>
+    <main>
+      <h2>Entries</h2>
+
+      <% if (entries.length === 0) { %>
+        <p>No entries yet.</p>
+      <% } else { %>
+        <ul>
+          <% entries.forEach((entry, index) => { %>
+            <li><a href="/entries/<%= index %>"><%= entry.title %></a></li>
+          <% }); %>
+        </ul>
+      <% } %>
+    </main>
+  </body>
+</html>

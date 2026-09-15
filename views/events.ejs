@@ -1,8 +1,30 @@
-<ul>
-<% events.forEach(event => { %>
-  <li><%= event.title %></li>
-<% }); %>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+  </head>
+  <body>
+    <%- include('partials/header') %>
+    <main>
+      <h2>Upcoming events</h2>
 
-<% if (events.length === 0) { %>
-  <li>No events found.</li>
-</ul>
+      <% if (events.length === 0) { %>
+        <p>No events yet.</p>
+      <% } else { %>
+        <ul>
+          <% events.forEach(event => { %>
+            <li>
+              <%= event.title %>
+              <% if (event.date) { %>
+                — <time datetime="<%= event.date %>"><%= event.date %></time>
+              <% } else { %>
+                — date to be announced
+              <% } %>
+            </li>
+          <% }); %>
+        </ul>
+      <% } %>
+    </main>
+  </body>
+</html>
