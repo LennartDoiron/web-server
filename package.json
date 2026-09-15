@@ -1,16 +1,1 @@
-{
-  "name": "gantry",
-  "version": "1.0.0",
-  "description": "Welcome! This guide will get your development environment up and running, even if you have never used Docker or a dev container before. Read through each section in order the first time — it only takes about 10 minutes.",
-  "main": "hello.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "express": "^5.2.1"
-  }
-}
+{"name":"hello-web","version":"1.0.0","type":"module","scripts":{"start":"node server.js"},"description":"","main":"server.js","repository":{"type":"git","url":"git+https://github.com/LennartDoiron/web-server.git"},"keywords":[],"author":"","license":"ISC","bugs":{"url":"https://github.com/LennartDoiron/web-server/issues"},"homepage":"https://github.com/LennartDoiron/web-server#readme","dependencies":{"express":"^5.2.1"}}
