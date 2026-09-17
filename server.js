@@ -106,7 +106,7 @@ app.get("/entries/:id", (req, res) => {
   res.render("entry", { title: entry.title, entry });
 });
 
-//The rest.
+//The rest
 
 app.use("/api", apiRouter);
 
