@@ -2,6 +2,7 @@ import express from "express";
 import apiRouter from "./routes/api.js";
 
 const app = express();
+app.set("view engine", "ejs");
 const PORT = process.env.PORT || 3000;
 
 app.set("view engine", "ejs");
@@ -40,9 +41,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/about", (req, res) => {
-  res.send("This is a web programming course.");
+  res.render("about", { title: "About" });
 });
-
 //Unit 2
 
 app.get("/hello/:name", (req, res) => {
