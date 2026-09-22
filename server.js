@@ -2,13 +2,14 @@ import express from "express";
 import apiRouter from "./routes/api.js";
 
 const app = express();
-app.set("view engine", "ejs");
 const PORT = process.env.PORT || 3000;
 
 app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use(express.static("public"));
+
+app.use(express.json());
 
 const projects = [
   { name: "Weather app", tag: "javascript" },
@@ -104,6 +105,40 @@ app.get("/entries/:id", (req, res) => {
   }
 
   res.render("entry", { title: entry.title, entry });
+});
+
+//Unit 5
+
+app.post("/entries", (req, res) => {
+  const { title, body } = req.body ?? {};
+  if (!title || !body) {
+    res.status(400).json({ error: "title and body are required" });
+    return;
+  }
+  const newEntry = { title, body };
+  entries.push(newEntry);
+  res.status(201).json(newEntry);
+});
+
+app.delete("/entries/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  if (Number.isNaN(id) || id < 0 || id >= entries.length) {
+    res.status(404).json({ error: "Entry not found" });
+    return;
+  }
+  entries.splice(id, 1);
+  res.status(204).send();
+});
+
+app.post("/events", (req, res) => {
+  const { title, date } = req.body ?? {};
+  if (!title) {
+    res.status(400).json({ error: "title is required" });
+    return;
+  }
+  const newEvent = { title, date: date ?? null };
+  events.push(newEvent);
+  res.status(201).json(newEvent);
 });
 
 //The rest
