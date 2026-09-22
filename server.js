@@ -130,6 +130,23 @@ app.delete("/entries/:id", (req, res) => {
   res.status(204).send();
 });
 
+const wishlist = [];
+
+app.post("/wishlist", (req, res) => {
+  const { item, note } = req.body ?? {};
+  if (!item) {
+    res.status(400).json({ error: "item is required" });
+    return;
+  }
+  const newItem = { item, note: note ?? null };
+  wishlist.push(newItem);
+  res.status(201).json(newItem);
+});
+
+app.get("/wishlist", (req, res) => {
+  res.json(wishlist);
+});
+
 //The rest
 
 app.use("/api", apiRouter);
