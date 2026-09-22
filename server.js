@@ -130,17 +130,6 @@ app.delete("/entries/:id", (req, res) => {
   res.status(204).send();
 });
 
-app.post("/events", (req, res) => {
-  const { title, date } = req.body ?? {};
-  if (!title) {
-    res.status(400).json({ error: "title is required" });
-    return;
-  }
-  const newEvent = { title, date: date ?? null };
-  events.push(newEvent);
-  res.status(201).json(newEvent);
-});
-
 //The rest
 
 app.use("/api", apiRouter);
