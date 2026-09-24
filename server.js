@@ -92,7 +92,7 @@ app.get("/events", (req, res) => {
 app.get("/entries", (req, res) => {
   res.set("Cache-Control", "public, max-age=60");
   res.set("X-Total-Count", entries.length);
-  res.status(200).render("entries", { title: "Entries", entries });
+  res.status(200).render("entries", { title: "My Notes", entries });
 });
 
 app.get("/entries/:id", (req, res) => {
