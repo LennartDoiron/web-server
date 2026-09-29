@@ -1,5 +1,6 @@
 import express from "express";
 import apiRouter from "./routes/api.js";
+import { readFile, writeFile } from "fs/promises";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,18 +22,6 @@ const events = [
   { title: "Career fair", date: "2026-09-24" },
   { title: "Hackathon kickoff", date: "2026-10-03" },
   { title: "Resume workshop", date: null },
-];
-
-const entries = [
-  { title: "Getting started", body: "The first note on the server." },
-  {
-    title: "Routing",
-    body: "req.params reads the path, req.query reads the query string.",
-  },
-  {
-    title: "Templates",
-    body: "EJS renders data into HTML before the response is sent.",
-  },
 ];
 
 //Unit 1
@@ -89,13 +78,17 @@ app.get("/events", (req, res) => {
   res.render("events", { title: "Events", events });
 });
 
-app.get("/entries", (req, res) => {
+app.get("/entries", async (req, res) => {
+  const data = await readFile("entries.json", "utf-8");
+  const entries = JSON.parse(data);
   res.set("Cache-Control", "public, max-age=60");
   res.set("X-Total-Count", entries.length);
   res.status(200).render("entries", { title: "My Notes", entries });
 });
 
-app.get("/entries/:id", (req, res) => {
+app.get("/entries/:id", async (req, res) => {
+  const data = await readFile("entries.json", "utf-8");
+  const entries = JSON.parse(data);
   const index = Number(req.params.id);
   const entry = Number.isInteger(index) ? entries[index] : undefined;
 
@@ -111,24 +104,30 @@ app.get("/entries/:id", (req, res) => {
 
 //Unit 5
 
-app.post("/entries", (req, res) => {
+app.post("/entries", async (req, res) => {
   const { title, body } = req.body ?? {};
   if (!title || !body) {
     res.status(400).json({ error: "title and body are required" });
     return;
   }
+  const data = await readFile("entries.json", "utf-8");
+  const entries = JSON.parse(data);
   const newEntry = { title, body };
   entries.push(newEntry);
+  await writeFile("entries.json", JSON.stringify(entries));
   res.status(201).json(newEntry);
 });
 
-app.delete("/entries/:id", (req, res) => {
+app.delete("/entries/:id", async (req, res) => {
   const id = parseInt(req.params.id);
+  const data = await readFile("entries.json", "utf-8");
+  const entries = JSON.parse(data);
   if (Number.isNaN(id) || id < 0 || id >= entries.length) {
     res.status(404).json({ error: "Entry not found" });
     return;
   }
   entries.splice(id, 1);
+  await writeFile("entries.json", JSON.stringify(entries));
   res.status(204).send();
 });
 
@@ -147,6 +146,19 @@ app.post("/wishlist", (req, res) => {
 
 app.get("/wishlist", (req, res) => {
   res.json(wishlist);
+});
+
+app.get("/three-posts", async (req, res) => {
+  const ids = [1, 2, 3];
+  const titles = [];
+  for (const id of ids) {
+    const response = await fetch(
+      `https://jsonplaceholder.typicode.com/posts/${id}`,
+    );
+    const post = await response.json();
+    titles.push(post.title);
+  }
+  res.status(200).json({ titles });
 });
 
 //The rest
