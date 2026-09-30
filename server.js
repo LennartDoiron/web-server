@@ -24,8 +24,6 @@ const events = [
   { title: "Resume workshop", date: null },
 ];
 
-//Unit 1
-
 app.get("/", (req, res) => {
   res.send("Hello, web!");
 });
@@ -33,7 +31,6 @@ app.get("/", (req, res) => {
 app.get("/about", (req, res) => {
   res.render("about", { title: "About" });
 });
-//Unit 2
 
 app.get("/hello/:name", (req, res) => {
   const { name } = req.params;
@@ -72,23 +69,23 @@ app.get("/projects", (req, res) => {
   });
 });
 
-//Unit 3
-
 app.get("/events", (req, res) => {
   res.render("events", { title: "Events", events });
 });
 
 app.get("/entries", async (req, res) => {
-  const data = await readFile("entries.json", "utf-8");
-  const entries = JSON.parse(data);
+  const entries = await withLock(async () =>
+    JSON.parse(await readFile("entries.json", "utf-8")),
+  );
   res.set("Cache-Control", "public, max-age=60");
   res.set("X-Total-Count", entries.length);
   res.status(200).render("entries", { title: "My Notes", entries });
 });
 
 app.get("/entries/:id", async (req, res) => {
-  const data = await readFile("entries.json", "utf-8");
-  const entries = JSON.parse(data);
+  const entries = await withLock(async () =>
+    JSON.parse(await readFile("entries.json", "utf-8")),
+  );
   const index = Number(req.params.id);
   const entry = Number.isInteger(index) ? entries[index] : undefined;
 
@@ -102,7 +99,12 @@ app.get("/entries/:id", async (req, res) => {
   res.render("entry", { title: entry.title, entry });
 });
 
-//Unit 5
+let queue = Promise.resolve();
+function withLock(fn) {
+  const run = queue.then(fn, fn);
+  queue = run.catch(() => {});
+  return run;
+}
 
 app.post("/entries", async (req, res) => {
   const { title, body } = req.body ?? {};
@@ -110,24 +112,32 @@ app.post("/entries", async (req, res) => {
     res.status(400).json({ error: "title and body are required" });
     return;
   }
-  const data = await readFile("entries.json", "utf-8");
-  const entries = JSON.parse(data);
   const newEntry = { title, body };
-  entries.push(newEntry);
-  await writeFile("entries.json", JSON.stringify(entries));
+  await withLock(async () => {
+    const data = await readFile("entries.json", "utf-8");
+    const entries = JSON.parse(data);
+    entries.push(newEntry);
+    await writeFile("entries.json", JSON.stringify(entries));
+  });
   res.status(201).json(newEntry);
 });
 
 app.delete("/entries/:id", async (req, res) => {
   const id = parseInt(req.params.id);
-  const data = await readFile("entries.json", "utf-8");
-  const entries = JSON.parse(data);
-  if (Number.isNaN(id) || id < 0 || id >= entries.length) {
+  const found = await withLock(async () => {
+    const data = await readFile("entries.json", "utf-8");
+    const entries = JSON.parse(data);
+    if (Number.isNaN(id) || id < 0 || id >= entries.length) {
+      return false;
+    }
+    entries.splice(id, 1);
+    await writeFile("entries.json", JSON.stringify(entries));
+    return true;
+  });
+  if (!found) {
     res.status(404).json({ error: "Entry not found" });
     return;
   }
-  entries.splice(id, 1);
-  await writeFile("entries.json", JSON.stringify(entries));
   res.status(204).send();
 });
 
@@ -150,18 +160,13 @@ app.get("/wishlist", (req, res) => {
 
 app.get("/three-posts", async (req, res) => {
   const ids = [1, 2, 3];
-  const titles = [];
-  for (const id of ids) {
-    const response = await fetch(
-      `https://jsonplaceholder.typicode.com/posts/${id}`,
-    );
-    const post = await response.json();
-    titles.push(post.title);
-  }
+  const responses = await Promise.all(
+    ids.map((id) => fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)),
+  );
+  const posts = await Promise.all(responses.map((response) => response.json()));
+  const titles = posts.map((post) => post.title);
   res.status(200).json({ titles });
 });
-
-//The rest
 
 app.use("/api", apiRouter);
 
