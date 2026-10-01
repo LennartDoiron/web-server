@@ -12,6 +12,8 @@ app.use(express.static("public"));
 
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
+
 const projects = [
   { name: "Weather app", tag: "javascript" },
   { name: "Portfolio site", tag: "express" },
@@ -77,7 +79,7 @@ app.get("/entries", async (req, res) => {
   const entries = await withLock(async () =>
     JSON.parse(await readFile("entries.json", "utf-8")),
   );
-  res.set("Cache-Control", "public, max-age=60");
+  res.set("Cache-Control", "no-cache");
   res.set("X-Total-Count", entries.length);
   res.status(200).render("entries", { title: "My Notes", entries });
 });
@@ -120,6 +122,21 @@ app.post("/entries", async (req, res) => {
     await writeFile("entries.json", JSON.stringify(entries));
   });
   res.status(201).json(newEntry);
+});
+
+app.post("/entries/classic", async (req, res) => {
+  const { title, body } = req.body ?? {};
+  if (!title || !body) {
+    res.status(400).send("title and body are required");
+    return;
+  }
+  await withLock(async () => {
+    const data = await readFile("entries.json", "utf-8");
+    const entries = JSON.parse(data);
+    entries.push({ title, body });
+    await writeFile("entries.json", JSON.stringify(entries));
+  });
+  res.redirect("/entries");
 });
 
 app.delete("/entries/:id", async (req, res) => {

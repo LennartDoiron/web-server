@@ -10,15 +10,33 @@
     <main>
       <h2>Entries</h2>
 
+<form id="entry-form">
+        <input type="text" name="title" placeholder="Title">
+        <input type="text" name="body" placeholder="Body">
+        <button type="submit">Add entry</button>
+      </form>
+
       <% if (entries.length === 0) { %>
-        <p>No entries yet.</p>
-      <% } else { %>
-        <ul>
-          <% entries.forEach((entry, index) => { %>
-            <li><a href="/entries/<%= index %>"><%= entry.title %></a></li>
-          <% }); %>
-        </ul>
+        <p id="no-entries">No entries yet.</p>
       <% } %>
+      <ul id="entries">
+        <% entries.forEach((entry, index) => { %>
+          <li data-id="<%= index %>">
+            <span><strong><a href="/entries/<%= index %>"><%= entry.title %></a>:</strong> <%= entry.body %></span>
+            <button class="delete-btn" type="button">Delete</button>
+          </li>
+        <% }); %>
+      </ul>
+
+      <section class="classic-form">
+        <h2>Classic form (no JavaScript)</h2>
+        <form method="POST" action="/entries/classic">
+          <input type="text" name="title" placeholder="Title">
+          <input type="text" name="body" placeholder="Body">
+          <button type="submit">Add entry the classic way</button>
+        </form>
+      </section>
     </main>
+    <script src="/app.js" defer></script>
   </body>
 </html>
