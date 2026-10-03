@@ -1,0 +1,24 @@
+* [33m4a1f630[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Added fetch form, delete buttons, and classic form
+* [33mc06f1c6[m Added lock for entries.json and use Promise.all in /three-posts
+* [33m2ec180c[m Store entries in JSON file and add /three-posts route
+*   [33mf928d44[m Merge branch 'main' of https://github.com/LennartDoiron/web-server
+[32m|[m[33m\[m  
+[32m|[m * [33mcbece2f[m update About page wording
+* [33m|[m [33m15a3218[m rewrite About page description
+[33m|[m[33m/[m  
+* [33mb521491[m rewrite About page description
+* [33ma645e62[m update About page wording
+* [33meb35721[m In class 9/24
+* [33m027b8db[m Added count and cache headers to GET /entries
+* [33mf129ccd[m Made some more changes to the in class portion of unit 5
+* [33m8ab9542[m Added in class work for unit 5
+* [33mae34579[m Added Unit 5 exercises to Server.js
+*   [33m7524f5f[m Merge pull request #2 from LennartDoiron/feature/about-page
+[34m|[m[35m\[m  
+[34m|[m * [33m58bfaab[m[33m ([m[1;31morigin/feature/about-page[m[33m)[m Added about page (already had one just update it to res.render)
+[34m|[m[34m/[m  
+* [33m442ae9f[m added some stuff for unit 4, mainly style.css and made some changes to the .ejs files.
+* [33mfd046cc[m fixed up some formatting in server.js and added most of the files from main PC to get repo up to date
+* [33m4f0bbb2[m Class 9/15
+* [33m72bed6e[m updated web-server to match unit1 instructions
+* [33mb70b871[m changed git repo from gantry root to web-server
