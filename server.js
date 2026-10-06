@@ -1,6 +1,7 @@
 import express from "express";
+import morgan from "morgan";
 import apiRouter from "./routes/api.js";
-import { readFile, writeFile } from "fs/promises";
+import entriesRouter from "./routes/entries.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +14,13 @@ app.use(express.static("public"));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
+app.use(morgan("dev"));
 
 const projects = [
   { name: "Weather app", tag: "javascript" },
@@ -75,89 +83,6 @@ app.get("/events", (req, res) => {
   res.render("events", { title: "Events", events });
 });
 
-app.get("/entries", async (req, res) => {
-  const entries = await withLock(async () =>
-    JSON.parse(await readFile("entries.json", "utf-8")),
-  );
-  res.set("Cache-Control", "no-cache");
-  res.set("X-Total-Count", entries.length);
-  res.status(200).render("entries", { title: "My Notes", entries });
-});
-
-app.get("/entries/:id", async (req, res) => {
-  const entries = await withLock(async () =>
-    JSON.parse(await readFile("entries.json", "utf-8")),
-  );
-  const index = Number(req.params.id);
-  const entry = Number.isInteger(index) ? entries[index] : undefined;
-
-  if (!entry) {
-    res
-      .status(404)
-      .render("error", { title: "Not found", message: "Entry not found." });
-    return;
-  }
-
-  res.render("entry", { title: entry.title, entry });
-});
-
-let queue = Promise.resolve();
-function withLock(fn) {
-  const run = queue.then(fn, fn);
-  queue = run.catch(() => {});
-  return run;
-}
-
-app.post("/entries", async (req, res) => {
-  const { title, body } = req.body ?? {};
-  if (!title || !body) {
-    res.status(400).json({ error: "title and body are required" });
-    return;
-  }
-  const newEntry = { title, body };
-  await withLock(async () => {
-    const data = await readFile("entries.json", "utf-8");
-    const entries = JSON.parse(data);
-    entries.push(newEntry);
-    await writeFile("entries.json", JSON.stringify(entries));
-  });
-  res.status(201).json(newEntry);
-});
-
-app.post("/entries/classic", async (req, res) => {
-  const { title, body } = req.body ?? {};
-  if (!title || !body) {
-    res.status(400).send("title and body are required");
-    return;
-  }
-  await withLock(async () => {
-    const data = await readFile("entries.json", "utf-8");
-    const entries = JSON.parse(data);
-    entries.push({ title, body });
-    await writeFile("entries.json", JSON.stringify(entries));
-  });
-  res.redirect("/entries");
-});
-
-app.delete("/entries/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
-  const found = await withLock(async () => {
-    const data = await readFile("entries.json", "utf-8");
-    const entries = JSON.parse(data);
-    if (Number.isNaN(id) || id < 0 || id >= entries.length) {
-      return false;
-    }
-    entries.splice(id, 1);
-    await writeFile("entries.json", JSON.stringify(entries));
-    return true;
-  });
-  if (!found) {
-    res.status(404).json({ error: "Entry not found" });
-    return;
-  }
-  res.status(204).send();
-});
-
 const wishlist = [];
 
 app.post("/wishlist", (req, res) => {
@@ -185,12 +110,19 @@ app.get("/three-posts", async (req, res) => {
   res.status(200).json({ titles });
 });
 
+app.use("/entries", entriesRouter);
+
 app.use("/api", apiRouter);
 
 app.use((req, res) => {
   res
     .status(404)
     .render("error", { title: "Not found", message: "Page not found." });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send("Something went wrong.");
 });
 
 app.listen(PORT, () => {
