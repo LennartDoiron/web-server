@@ -21,8 +21,9 @@
       <% } %>
       <ul id="entries">
         <% entries.forEach((entry, index) => { %>
-          <li data-id="<%= index %>">
-            <span><strong><a href="/entries/<%= index %>"><%= entry.title %></a>:</strong> <%= entry.body %></span>
+          <li data-id="<%= index %>" data-title="<%= entry.title %>" data-body="<%= entry.body %>">
+            <span class="entry-display"><strong><a href="/entries/<%= index %>"><%= entry.title %></a>:</strong> <%= entry.body %></span>
+            <button class="edit-btn" type="button">Edit</button>
             <button class="delete-btn" type="button">Delete</button>
           </li>
         <% }); %>

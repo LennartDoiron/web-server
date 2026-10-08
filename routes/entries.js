@@ -92,6 +92,32 @@ router.post(
   }),
 );
 
+router.put(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    const id = parseInt(req.params.id);
+    const result = validateEntry(req.body ?? {});
+    const found = await withLock(async () => {
+      const entries = JSON.parse(await readFile(DATA_FILE, "utf-8"));
+      const lookup = findEntryById(entries, id);
+      if (lookup.some && result.ok) {
+        entries[id] = result.value;
+        await writeFile(DATA_FILE, JSON.stringify(entries));
+      }
+      return lookup;
+    });
+    if (!found.some) {
+      res.status(404).json({ error: "Entry not found" });
+      return;
+    }
+    if (!result.ok) {
+      res.status(400).json({ error: result.error });
+      return;
+    }
+    res.status(200).json(result.value);
+  }),
+);
+
 router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
