@@ -20,9 +20,10 @@
         <p id="no-entries">No entries yet.</p>
       <% } %>
       <ul id="entries">
-        <% entries.forEach((entry, index) => { %>
-          <li data-id="<%= index %>" data-title="<%= entry.title %>" data-body="<%= entry.body %>">
-            <span class="entry-display"><strong><a href="/entries/<%= index %>"><%= entry.title %></a>:</strong> <%= entry.body %></span>
+        <% entries.forEach((entry) => { %>
+          <li data-id="<%= entry.id %>" data-title="<%= entry.title %>" data-body="<%= entry.body %>">
+            <span class="entry-display"><strong><a href="/entries/<%= entry.id %>"><%= entry.title %></a>:</strong> <%= entry.body %></span>
+            <button class="favorite-btn" type="button"><%= entry.favorite ? '★' : '☆' %></button>
             <button class="edit-btn" type="button">Edit</button>
             <button class="delete-btn" type="button">Delete</button>
           </li>

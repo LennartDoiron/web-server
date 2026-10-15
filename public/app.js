@@ -1,10 +1,39 @@
 const form = document.querySelector("#entry-form");
 const list = document.querySelector("#entries");
 
+const timedFetch = (url, options = {}) =>
+  fetch(url, { ...options, signal: AbortSignal.timeout(5000) });
+
+const fetchJSON = async (url, options) => {
+  let response;
+  try {
+    response = await timedFetch(url, options);
+  } catch (error) {
+    throw new Error(
+      error.name === "TimeoutError"
+        ? "The server did not answer within five seconds."
+        : "Could not reach the server.",
+    );
+  }
+
+  let body = {};
+  try {
+    body = await response.json();
+  } catch {}
+
+  if (!response.ok) {
+    const error = new Error(
+      body.error || `The server answered ${response.status}.`,
+    );
+    error.status = response.status;
+    throw error;
+  }
+  return body;
+};
+
 const buildItem = (entry) => {
-  const id = list.children.length;
   const item = document.createElement("li");
-  item.dataset.id = id;
+  item.dataset.id = entry.id;
   item.dataset.title = entry.title;
   item.dataset.body = entry.body;
 
@@ -12,7 +41,7 @@ const buildItem = (entry) => {
   const title = document.createElement("strong");
   text.className = "entry-display";
   const link = document.createElement("a");
-  link.href = `/entries/${id}`;
+  link.href = `/entries/${entry.id}`;
   link.textContent = entry.title;
   title.append(link, ":");
   text.append(title, ` ${entry.body}`);
@@ -27,16 +56,13 @@ const buildItem = (entry) => {
   editButton.type = "button";
   editButton.textContent = "Edit";
 
-  item.append(text, editButton, button);
-  return item;
-};
+  const favoriteButton = document.createElement("button");
+  favoriteButton.className = "favorite-btn";
+  favoriteButton.type = "button";
+  favoriteButton.textContent = entry.favorite ? "★" : "☆";
 
-const renumber = () => {
-  [...list.children].forEach((item, index) => {
-    item.dataset.id = index;
-    const link = item.querySelector("a");
-    if (link) link.href = `/entries/${index}`;
-  });
+  item.append(text, favoriteButton, editButton, button);
+  return item;
 };
 
 form.addEventListener("submit", async (event) => {
@@ -44,24 +70,23 @@ form.addEventListener("submit", async (event) => {
 
   const data = new FormData(form);
   const entry = Object.fromEntries(data);
+  const button = form.querySelector("button");
 
-  const response = await fetch("/entries", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(entry),
-  });
-
-  if (!response.ok) {
-    const { error } = await response.json();
-    alert(error);
-    return;
+  button.disabled = true;
+  try {
+    const saved = await fetchJSON("/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
+    });
+    list.append(buildItem(saved));
+    document.querySelector("#no-entries")?.remove();
+    form.reset();
+  } catch (error) {
+    alert(`Your entry was not saved. ${error.message}`);
+  } finally {
+    button.disabled = false;
   }
-
-  const saved = await response.json();
-  list.append(buildItem(saved));
-  document.querySelector("#no-entries")?.remove();
-
-  form.reset();
 });
 
 const fillDisplay = (display, entry, id) => {
@@ -122,34 +147,20 @@ const startEdit = (item) => {
 
     save.disabled = true;
     try {
-      const response = await fetch(`/entries/${item.dataset.id}`, {
+      const saved = await fetchJSON(`/entries/${item.dataset.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entry),
-        signal: AbortSignal.timeout(5000),
       });
-
-      // Home Exercise: the entry was deleted elsewhere, so remove its stale form.
-      if (response.status === 404) {
-        item.remove();
-        renumber();
-        return;
-      }
-
-      if (!response.ok) {
-        const { error } = await response.json();
-        alert(error);
-        return;
-      }
-
-      const saved = await response.json();
       item.dataset.title = saved.title;
       item.dataset.body = saved.body;
       close();
-    } catch {
-      alert(
-        "Your changes were not saved: the server did not answer properly. Please try again.",
-      );
+    } catch (error) {
+      if (error.status === 404) {
+        item.remove();
+        return;
+      }
+      alert(`Your changes were not saved. ${error.message}`);
     } finally {
       save.disabled = false;
     }
@@ -157,6 +168,20 @@ const startEdit = (item) => {
 };
 
 list.addEventListener("click", async (event) => {
+  if (event.target.matches(".favorite-btn")) {
+    const favoriteButton = event.target;
+    const id = favoriteButton.closest("li").dataset.id;
+    try {
+      const saved = await fetchJSON(`/entries/${id}/favorite`, {
+        method: "PATCH",
+      });
+      favoriteButton.textContent = saved.favorite ? "★" : "☆";
+    } catch (error) {
+      alert(`That entry was not updated. ${error.message}`);
+    }
+    return;
+  }
+
   if (event.target.matches(".edit-btn")) {
     startEdit(event.target.closest("li"));
     return;
@@ -170,16 +195,10 @@ list.addEventListener("click", async (event) => {
 
   button.disabled = true;
   try {
-    const response = await fetch(`/entries/${id}`, { method: "DELETE" });
-    if (!response.ok) {
-      const { error } = await response.json();
-      alert(error);
-      button.disabled = false;
-      return;
-    }
+    await fetchJSON(`/entries/${id}`, { method: "DELETE" });
     item.remove();
-    renumber();
-  } catch {
+  } catch (error) {
+    alert(`That entry was not deleted. ${error.message}`);
     button.disabled = false;
   }
 });
