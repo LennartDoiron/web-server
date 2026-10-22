@@ -1,0 +1,28 @@
+<li id="entry-<%= entry.id %>">
+  <span class="entry-display"><strong><%= entry.title %>:</strong> <%= entry.body %></span>
+  <button
+    class="favorite-btn"
+    type="button"
+    hx-patch="/entries/<%= entry.id %>/favorite"
+    hx-target="closest li"
+    hx-swap="outerHTML"
+    hx-disabled-elt="this"
+  ><%= entry.favorite ? '★' : '☆' %></button>
+  <button
+    class="edit-btn"
+    type="button"
+    hx-get="/entries/<%= entry.id %>/edit"
+    hx-target="closest li"
+    hx-swap="outerHTML"
+  >Edit</button>
+  <button
+    class="delete-btn"
+    hx-delete="/entries/<%= entry.id %>"
+    hx-target="closest li"
+    hx-swap="outerHTML"
+    hx-confirm="Delete this entry?"
+    hx-disabled-elt="this"
+    hx-indicator="next .delete-indicator"
+  >Delete</button>
+  <span class="delete-indicator htmx-indicator">Deleting...</span>
+</li>

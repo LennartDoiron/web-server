@@ -17,7 +17,10 @@ const validateEntry = ({ title, body }) => {
   return Ok({ title: trimmedTitle, body: trimmedBody });
 };
 
-export const listEntries = async () => (await getAll()).map(toEntryDto);
+export const listEntries = async () =>
+  (await getAll())
+    .map(toEntryDto)
+    .sort((a, b) => a.title.localeCompare(b.title));
 
 export const getEntry = async (id) => {
   const entry = await findById(id);

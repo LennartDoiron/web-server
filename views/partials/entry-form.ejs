@@ -1,0 +1,12 @@
+<form
+  id="entry-form"
+  hx-post="/entries"
+  hx-target="#entries"
+  hx-swap="beforeend"
+  hx-disabled-elt="find button"
+  <% if (locals.oob) { %>hx-swap-oob="true"<% } %>
+>
+  <input type="text" name="title" placeholder="Title">
+  <input type="text" name="body" placeholder="Body">
+  <button type="submit">Add entry</button>
+</form>
